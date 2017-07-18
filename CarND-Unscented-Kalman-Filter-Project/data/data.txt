@@ -1,0 +1,1 @@
+timestamp x_groundtruth y_groundtruth vx_groundtruth vy_groundtruth yaw_groundtruth yawrate_groundtruth
