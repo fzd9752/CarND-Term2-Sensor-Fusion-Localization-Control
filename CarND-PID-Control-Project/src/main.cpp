@@ -29,7 +29,7 @@ std::string hasData(std::string s) {
 }
 
 // Set maximum speed for simulator
-double target_speed = 50;
+double target_speed = 30;
 
 // Define function to restart the server
 void Restart(uWS::WebSocket<uWS::SERVER> ws){
@@ -45,7 +45,7 @@ int main()
   PID pid;
   // TODO: Initialize the pid variable.
   pid.Init(0.1715, 0.0000156905, 2.98); // Manually current values
-  //pid.twiddleInit(0.1, 0, 1000);
+  //pid.twiddleInit(0.2, 40, 600);
   pid.is_twiddle = false;
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -92,7 +92,7 @@ int main()
           }
 
           // DEBUG
-          //std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;

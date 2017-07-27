@@ -1,92 +1,47 @@
-# CarND-Controls-PID
-Self-Driving Car Engineer Nanodegree Program
+# PID Controller
+Self-Driving Car Engineer Nanodegree Program - Elsa Wang
 
 ---
 
-## Dependencies
+### Instruction
 
-* cmake >= 3.5
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
-* [uWebSockets](https://github.com/uWebSockets/uWebSockets)
-  * Run either `./install-mac.sh` or `./install-ubuntu.sh`.
-  * If you install from source, checkout to commit `e94b6e1`, i.e.
-    ```
-    git clone https://github.com/uWebSockets/uWebSockets 
-    cd uWebSockets
-    git checkout e94b6e1
-    ```
-    Some function signatures have changed in v0.14.x. See [this PR](https://github.com/udacity/CarND-MPC-Project/pull/3) for more details.
-* Simulator. You can download these from the [project intro page](https://github.com/udacity/self-driving-car-sim/releases) in the classroom.
+The code has compiled. It can run directly with terminal code `build/pid`.
 
-There's an experimental patch for windows in this [PR](https://github.com/udacity/CarND-PID-Control-Project/pull/3)
+### Files Change
 
-## Basic Build Instructions
+- `PID.h` and `PID.cpp` at *src*.
+  1. Complete `PID` for **steer angle**
+  2. Add `throttle` function to control the **speed**
+  3. Add `twiddle` functions to tune the hyperparameter
+- `main.cpp`. Complete code to execute the simulation.
+- `.mp4` files. Screen records for simulator running with ***30mph*** and ***50mph*** targeted speed and ***twiddle*** process.
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./pid`. 
+### Reflection
 
-## Editor Settings
+#### Kp, Kd, Ki Components Effects
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+These three hyperparameters decide the performance of controller.
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+**Proportional Controller**
 
-## Code Style
+The core part of the PID, it changes steer angle based on the distance between current position to the target position(CTE). The parameter **Kp** mainly affects ***rise time*** and ***overshoot***. One decides how long the car gets to CTE = 0 from the beginning, and the other decides the oscillation. With **Kp** increasing, the **rise time** decreases sharply, but also more oscillation is introduced.
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+**Derivative Controller**
 
-## Project Instructions and Rubric
+The vital part for cut down the oscillation. Derivative Controller decreases the overshoot by predicting the future movement of the car. Calculating difference between the current error and previous error, D Controller could minus the over steer angle before overshoot. More difference, less steer angle, and vice versa. By tuning its parameter Kd, D controller shows impressive performance on decreasing overshoot.
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+**Integral Controller**
 
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
+Well, I think this is the most tricky part of PID. By accumulating the errors, it could increment controller ability to handle the noise, like random start position or tire beginning angles. However, it increases the overshoot as the same time. I tuned its parameter Ki carefully. The car performance didn't show an obviously increase, so tell the truth,  I think I doesn't play a vital role in this project.
 
-## Hints!
+#### Final Hyperparameters Chosen
 
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
+I combined manual method and twiddle to tune the PID controller. Firstly, I tuned PID manually. I set all parameters to 0, then started to increase the Kd until it got `CTE = 0` with a relative high rise time(within 100 steps) and a relative less oscillation(don't over road too much). Then, I added to Pd steps by steps. Since the oscillation became small (about average CTE 0.5), I tried to add Ki. The last parameters got from manual methods was `Kp = 0.2, Kd = 2.0, Ki = 0`.
 
-## Call for IDE Profiles Pull Requests
+In account of manual parameters, I set start parameters for twiddle with  `Kp = 0.15, Kd = 2.0, Ki = 0`. Also, manual tuning let me know the sensitive unit of each parameters, so I set `dp = {0.015, .2, 0.00005}` for `Kp`, `Kd` and `Ki` separately.
 
-Help your fellow students!
+After several iterations twiddle(really slow...), I got final hyperparameters `Kp = 0.1715, Ki = 0.0000156905, Kd = 2.98`.
 
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
+I tried these hyperparameters with different target speeds. The highest speed that this PID could pass is 50mph, the average speed about 45mph.
 
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
+The result shows that there're still spaces to improve this PID controller. To increase `Kd` seems to be a feasible way for the high speed. Beside the hyperparameters, to add a PID for `brake` maybe an approach to increase the stability for the car, especially for curving road.
